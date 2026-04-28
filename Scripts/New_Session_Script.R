@@ -18,3 +18,15 @@ yearly_counts <- slido_time %>%
 
 yearly_no1996 <- yearly_counts %>%
   filter(YEAR != 1996)
+
+cause_clean <- slido %>%
+  st_drop_geometry() %>%
+  mutate(CAUSE_CLEAN = case_when(
+    str_detect(tolower(CONTR_FACT), "road|cut slope|fill slope|road fill|steep road") ~ "Road Related",
+    str_detect(tolower(CONTR_FACT), "clear cut|clearcut|reforested clearcut") ~ "Clear Cut",
+    str_detect(tolower(CONTR_FACT), "natural") ~ "Natural",
+    str_detect(tolower(CONTR_FACT), "human") ~ "Human",
+    str_detect(tolower(CONTR_FACT), "pre-existing|existing|exisitng") ~ "Pre-existing Slide",
+    TRUE ~ "Other/Unknown"
+  )) %>%
+  filter(CAUSE_CLEAN != "Other/Unknown")

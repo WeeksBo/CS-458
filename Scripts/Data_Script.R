@@ -27,8 +27,7 @@ ggplot(yearly_counts , aes(x = YEAR, y = events)) +
   labs(
     title = "Oregon Landslide Events Over Time (1950-2023)",
     x = "Year",
-    y = "Number of Landslide Events",
-    caption = "Source: DOGAMI SLIDO Database"
+    y = "Number of Landslide Events"
   ) +
   theme_minimal() + 
   theme(
@@ -48,8 +47,7 @@ ggplot(yearly_no1996, aes(x = YEAR, y = events)) +
     title = "Oregon Landslide Events Over Time (1950-2023)",
     subtitle = "1996 excluded",
     x = "Year",
-    y = "Number of Landslide Events",
-    caption = "Source: DOGAMI SLIDO Database"
+    y = "Number of Landslide Events"
   ) +
   theme_minimal() + 
   theme(
@@ -81,41 +79,67 @@ or_base_c +
   labs(
     title = "Oregon Landslide Locations (1928-2023)",
     subtitle = "Red Dots Represent Recorded Landslides",
-    caption = "Source: DOGAMI SLIDO Database",
     x="Longitude",
     y="Latitude"
   )
 
-
-slido %>%
+# Create cause_clean object
+cause_clean <- slido %>%
   st_drop_geometry() %>%
-mutate(CAUSE_CLEAN = case_when(
+  mutate(CAUSE_CLEAN = case_when(
     str_detect(tolower(CONTR_FACT), "road|cut slope|fill slope|road fill|steep road") ~ "Road Related",
     str_detect(tolower(CONTR_FACT), "clear cut|clearcut|reforested clearcut") ~ "Clear Cut",
     str_detect(tolower(CONTR_FACT), "natural") ~ "Natural",
     str_detect(tolower(CONTR_FACT), "human") ~ "Human",
-    str_detect(tolower(CONTR_FACT), "water|sewer|irrigation|drainage") ~ "Water Related",
-    str_detect(tolower(CONTR_FACT), "wildfire|fire|eagle") ~ "Wildfire",
     str_detect(tolower(CONTR_FACT), "pre-existing|existing|exisitng") ~ "Pre-existing Slide",
-    str_detect(tolower(CONTR_FACT), "freeze|wind") ~ "Weather",
-    str_detect(tolower(CONTR_FACT), "stream|headwall|embankment|loading") ~ "Slope/Structure",
-    str_detect(tolower(CONTR_FACT), "tree") ~ "Tree Topple",
     TRUE ~ "Other/Unknown"
   )) %>%
-  filter(CAUSE_CLEAN != "Other/Unknown") %>%
+  filter(CAUSE_CLEAN != "Other/Unknown")
+
+# Then plot from it
+cause_clean %>%
   group_by(CAUSE_CLEAN) %>%
   summarise(events = n()) %>%
   arrange(desc(events)) %>%
   ggplot(aes(x = reorder(CAUSE_CLEAN, events), y = events, fill = CAUSE_CLEAN)) +
-  geom_col() +
+  geom_col(fill = "darkorange4") +
   coord_flip() +
   labs(
-    title = "Contributing Factors to Oregon Landslides",
+    title = "Top 5 Contributing Factors to Oregon Landslides",
     x = "Contributing Factor",
-    y = "Number of Events",
-    caption = "Source: DOGAMI SLIDO Database"
+    y = "Number of Events"
   ) +
   theme_minimal() +
   theme(legend.position = "none")
+ 
 
 
+library(viridis)
+
+slido_time %>%
+  st_drop_geometry() %>%
+#  filter(YEAR != 1996) %>%
+  filter(!is.na(TYPE_MOVE)) %>%
+  filter(TYPE_MOVE != "") %>%
+  mutate(decade = as.factor(floor(YEAR / 10) * 10)) %>%
+  mutate(TYPE_CLEAN = case_when(
+    str_detect(tolower(TYPE_MOVE), "debris|flow") ~ "Debris Flow",
+    str_detect(tolower(TYPE_MOVE), "slide|earthslide") ~ "Slide",
+    str_detect(tolower(TYPE_MOVE), "fall|rock") ~ "Rock Fall",
+    str_detect(tolower(TYPE_MOVE), "earthflow|efl") ~ "Earthflow",
+    TRUE ~ "Other"
+  )) %>%
+  group_by(TYPE_CLEAN, decade) %>%
+  summarise(events = n(), .groups = "drop") %>%
+  ggplot(aes(x = decade, y = TYPE_CLEAN, fill = events)) +
+  geom_tile(color = "white") +
+  scale_fill_viridis(name = "Events") +
+  labs(
+    title = "Oregon Landslide Types by Decade",
+    x = "Decade",
+    y = "Landslide Type",
+    caption = "Source: DOGAMI SLIDO Database"
+  ) +
+  theme_minimal()
+
+ggsave("Visualizations/heatmap.png", width = 10, height = 8, dpi = 300)
