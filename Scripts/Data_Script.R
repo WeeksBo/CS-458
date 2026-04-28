@@ -85,3 +85,37 @@ or_base_c +
     x="Longitude",
     y="Latitude"
   )
+
+
+slido %>%
+  st_drop_geometry() %>%
+mutate(CAUSE_CLEAN = case_when(
+    str_detect(tolower(CONTR_FACT), "road|cut slope|fill slope|road fill|steep road") ~ "Road Related",
+    str_detect(tolower(CONTR_FACT), "clear cut|clearcut|reforested clearcut") ~ "Clear Cut",
+    str_detect(tolower(CONTR_FACT), "natural") ~ "Natural",
+    str_detect(tolower(CONTR_FACT), "human") ~ "Human",
+    str_detect(tolower(CONTR_FACT), "water|sewer|irrigation|drainage") ~ "Water Related",
+    str_detect(tolower(CONTR_FACT), "wildfire|fire|eagle") ~ "Wildfire",
+    str_detect(tolower(CONTR_FACT), "pre-existing|existing|exisitng") ~ "Pre-existing Slide",
+    str_detect(tolower(CONTR_FACT), "freeze|wind") ~ "Weather",
+    str_detect(tolower(CONTR_FACT), "stream|headwall|embankment|loading") ~ "Slope/Structure",
+    str_detect(tolower(CONTR_FACT), "tree") ~ "Tree Topple",
+    TRUE ~ "Other/Unknown"
+  )) %>%
+  filter(CAUSE_CLEAN != "Other/Unknown") %>%
+  group_by(CAUSE_CLEAN) %>%
+  summarise(events = n()) %>%
+  arrange(desc(events)) %>%
+  ggplot(aes(x = reorder(CAUSE_CLEAN, events), y = events, fill = CAUSE_CLEAN)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Contributing Factors to Oregon Landslides",
+    x = "Contributing Factor",
+    y = "Number of Events",
+    caption = "Source: DOGAMI SLIDO Database"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
