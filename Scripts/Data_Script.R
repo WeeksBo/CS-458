@@ -142,4 +142,132 @@ slido_time %>%
   ) +
   theme_minimal()
 
-ggsave("Visualizations/heatmap.png", width = 10, height = 8, dpi = 300)
+
+
+# Count landslides per year
+yearly_counts <- slido_time %>%
+  st_drop_geometry() %>%
+  filter(YEAR != 1996) %>%
+  group_by(YEAR) %>%
+  summarise(landslides = n())
+
+# Join with precipitation
+cor_data <- yearly_counts %>%
+  inner_join(precip_clean, by = "YEAR") %>%
+  rename(precipitation = PRCP, temperature = TAVG)
+
+# Check it
+head(cor_data)
+nrow(cor_data)
+
+library(corrplot)
+
+# Build correlation matrix
+cor_matrix <- cor_data %>%
+  select(landslides, precipitation, temperature) %>%
+  cor(use = "complete.obs")
+
+# Plot correlogram
+corrplot(cor_matrix,
+         method = "color",
+         type = "upper",
+         tl.col = "black",
+         tl.srt = 45,
+         addCoef.col = "black",
+         number.cex = 1,
+         col = COL2("RdBu"),
+         title = "Correlation Between Landslides, Precipitation and Temperature",
+         mar = c(0,0,2,0))
+
+
+
+
+
+library(tigris)
+
+# Get primary and secondary roads for Oregon
+oregon_roads <- primary_secondary_roads(state = "OR") %>%
+  st_transform(crs = 4326)
+
+
+ggplot() +
+  geom_sf(data = oregon_counties, fill = "grey90", color = "white") +
+  geom_point(data = slido_coords,
+             aes(x = X, y = Y),
+             color = "red", size = 0.8, alpha = 0.3) +
+  geom_sf(data = oregon_roads, color = "blue", 
+          linewidth = 0.3, alpha = 0.5) +
+  labs(
+    title = "Oregon Landslide Locations and Roads",
+    subtitle = "Red dots = Landslides, Blue Lines = Major Roads"
+  ) +
+  theme_void()
+
+
+
+
+
+
+
+# Remove rows with no precipitation data
+precip_2025_clean <- precip_2025 %>%
+  filter(!is.na(PRCP))
+
+ggplot() +
+  geom_sf(data = oregon_counties, fill = "grey90", color = "white") +
+  geom_point(data = slido_coords,
+             aes(x = X, y = Y),
+             color = "red", size = 0.7, alpha = 0.3) +
+  geom_point(data = precip_2025_clean,
+             aes(x = LONGITUDE, y = LATITUDE, color = PRCP),
+             size = 6, alpha = 0.3) +
+  scale_color_gradient(low = "lightblue", high = "darkblue",
+                       name = "2025 Precipitation\n(inches)") +
+  geom_sf(data = oregon_roads, color = "chocolate4",
+          linewidth = 0.2, alpha = 0.5) +
+  labs(
+    title = "Predicted Landslide Risk: 2025 Precipitation,\nRoads and Historical Landslides",
+    subtitle = "Dark Blue = High Rainfall | Brown = Major Roads | Red = Historical Landslides",
+  ) +
+  theme_void()
+
+
+
+
+
+
+
+ggplot() +
+  geom_line(data = yearly_counts %>% filter(YEAR != 1996),
+            aes(x = YEAR, y = events, color = "Landslide Events"), 
+            linewidth = 1) +
+  geom_smooth(data = yearly_counts %>% filter(YEAR != 1996),
+              aes(x = YEAR, y = events, color = "Overall Trend"),
+              method = "loess", se = FALSE, linetype = "dashed") +
+  geom_line(data = precip_clean,
+            aes(x = YEAR, y = PRCP / 3, color = "Precipitation"),
+            linewidth = 1, alpha = 0.7) +
+  scale_y_continuous(
+    name = "Landslide Events",
+    sec.axis = sec_axis(~. * 3, name = "Precipitation (inches)")
+  ) +
+  scale_color_manual(
+    name = "Legend",
+    values = c("Landslide Events" = "steelblue",
+               "Overall Trend" = "darkred",
+               "Precipitation" = "darkgreen")
+  ) +
+  labs(
+    title = "Oregon Landslide Events and Precipitation Over Time (1950-2023)",
+    subtitle = "1996 excluded",
+    x = "Year",
+    caption = "Source: DOGAMI SLIDO & NOAA"
+  ) +
+  theme_minimal() +
+  theme(legend.position = c(0.2, 0.8))
+
+ggsave("Visualizations/trend_precip.png", width = 10, height = 6, dpi = 300)
+
+
+
+

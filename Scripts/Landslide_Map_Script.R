@@ -30,3 +30,71 @@ or_base_c +
   )
 
 
+# Get primary and secondary roads for Oregon
+oregon_roads <- primary_secondary_roads(state = "OR") %>%
+  st_transform(crs = 4326)
+
+
+ggplot() +
+  geom_sf(data = oregon_counties, fill = "grey90", color = "white") +
+  geom_point(data = slido_coords,
+             aes(x = X, y = Y),
+             color = "red", size = 0.8, alpha = 0.3) +
+  geom_sf(data = oregon_roads, color = "blue", 
+          linewidth = 0.3, alpha = 0.5) +
+  labs(
+    title = "Oregon Landslide Locations and Roads",
+    subtitle = "Red dots = Landslides, Blue Lines = Major Roads"
+  ) +
+  theme_void()
+
+
+# Remove rows with no precipitation data
+precip_2025_clean <- precip_2025 %>%
+  filter(!is.na(PRCP))
+
+ggplot() +
+  geom_sf(data = oregon_counties, fill = "grey90", color = "white") +
+  geom_point(data = slido_coords,
+             aes(x = X, y = Y),
+             color = "red", size = 0.7, alpha = 0.3) +
+  geom_point(data = precip_2025_clean,
+             aes(x = LONGITUDE, y = LATITUDE, color = PRCP),
+             size = 6, alpha = 0.3) +
+  scale_color_gradient(low = "lightblue", high = "darkblue",
+                       name = "2025 Precipitation\n(inches)") +
+  geom_sf(data = oregon_roads, color = "chocolate4",
+          linewidth = 0.2, alpha = 0.5) +
+  labs(
+    title = "Predicted Landslide Risk: 2025 Precipitation,\nRoads and Historical Landslides",
+    subtitle = "Dark Blue = High Rainfall | Brown = Major Roads | Red = Historical Landslides",
+  ) +
+  theme_void()
+
+
+# Remove rows with no precipitation data
+precip_2025_clean <- precip_2025 %>%
+  filter(!is.na(PRCP))
+
+ggplot() +
+  geom_sf(data = oregon_counties, fill = "grey90", color = "white") +
+  geom_point(data = slido_coords,
+             aes(x = X, y = Y),
+             color = "red", size = 0.7, alpha = 0.3) +
+  geom_point(data = precip_2025_clean,
+             aes(x = LONGITUDE, y = LATITUDE, color = PRCP),
+             size = 6, alpha = 0.3) +
+  scale_color_gradient(low = "lightblue", high = "darkblue",
+                       name = "2025 Precipitation\n(inches)") +
+  geom_sf(data = oregon_roads, color = "chocolate4",
+          linewidth = 0.2, alpha = 0.5) +
+  annotate("point", x = -123.97, y = 44.567,
+           color = "yellow", size = 5, shape = 16) +
+  annotate("text", x = -124.55, y = 44.5,
+           label = "Predicted\nNext\nLandslide\nZone",
+           color = "black", size = 3, fontface = "bold") +
+  labs(
+    title = "Predicted Landslide Risk: 2025 Precipitation,\nRoads and Historical Landslides",
+    subtitle = "Dark Blue = High Rainfall | Brown = Major Roads | Red = Historical Landslides",
+  ) +
+  theme_void()
