@@ -12,13 +12,17 @@ cause_clean <- slido %>%
   )) %>%
   filter(CAUSE_CLEAN != "Other/Unknown")
 
+write.csv(cause_clean, "C:/OSU/CS_458/Data/landslides_for_gephi.csv", row.names = FALSE)
+
+
 # Then plot from it
 cause_clean %>%
   group_by(CAUSE_CLEAN) %>%
   summarise(events = n()) %>%
   arrange(desc(events)) %>%
-  ggplot(aes(x = reorder(CAUSE_CLEAN, events), y = events, fill = CAUSE_CLEAN)) +
+  ggplot(aes(x = reorder(CAUSE_CLEAN, events), y = events)) +
   geom_col(fill = "darkorange4") +
+  scale_y_continuous(breaks = seq(0, 1800, by = 100)) +
   coord_flip() +
   labs(
     title = "Top 5 Contributing Factors to Oregon Landslides",

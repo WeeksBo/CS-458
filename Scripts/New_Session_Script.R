@@ -29,10 +29,10 @@ precip_clean <- precip %>%
   ) %>%
   rename(YEAR = DATE)
 
-roads <- st_read(
-  "Data/Raw_Data/Transportation_Road.gdb",
-  layer = "Transportation_Statewide_Road"
-)
+#roads <- st_read(
+#  "Data/Raw_Data/Transportation_Road.gdb",
+#  layer = "Transportation_Statewide_Road"
+#)
 
 precip_2025 <- read.csv("Data/Raw_Data/Oregon_percipitation_data.csv")
 
@@ -48,3 +48,9 @@ cause_clean <- slido %>%
     TRUE ~ "Other/Unknown"
   )) %>%
   filter(CAUSE_CLEAN != "Other/Unknown")
+
+slope_data <- slido %>%
+  st_drop_geometry() %>%
+  filter(!is.na(SLOPE))
+
+

@@ -266,8 +266,27 @@ ggplot() +
   theme_minimal() +
   theme(legend.position = c(0.2, 0.8))
 
-ggsave("Visualizations/trend_precip.png", width = 10, height = 6, dpi = 300)
+
+sum(slido$YEAR == 1996, na.rm = TRUE)
+table(slido_map$YEAR)
+
+# Total records in SLIDO
+nrow(slido)
+
+# Missing year
+sum(is.na(slido$YEAR))
 
 
 
+# Missing cause
+sum(is.na(slido$CONTR_FACT) | slido$CONTR_FACT == "")
+
+# Have both year and cause
+sum(!is.na(slido$YEAR) & !is.na(slido$CONTR_FACT) & slido$CONTR_FACT != "")
+
+# Percentage missing year
+round(sum(is.na(slido$YEAR)) / nrow(slido) * 100, 1)
+
+# Percentage missing cause
+round(sum(is.na(slido$CONTR_FACT) | slido$CONTR_FACT == "") / nrow(slido) * 100, 1)
 

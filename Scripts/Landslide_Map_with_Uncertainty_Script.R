@@ -1,3 +1,4 @@
+
 # Get coordinates from the spatial data
 slido_coords <- slido_map %>%
   st_transform(crs = 4326) %>%
@@ -102,5 +103,54 @@ ggplot() +
   labs(
     title = "Predicted Landslide Risk: 2025 Precipitation,\nRoads and Historical Landslides",
     subtitle = "Dark Blue = High Rainfall | Brown = Major Roads | Red = Historical Landslides",
+  ) +
+  theme_void()
+
+
+fires <- read.csv("C:/OSU/CS_458/Data/Raw_Data/ODF_Fire.csv")
+
+# Clean and filter to Oregon fires with coordinates
+fires_clean <- fires %>%
+  filter(!is.na(Latitude), !is.na(Longitude), 
+         !is.na(FinalFireSizeAcres), FinalFireSizeAcres > 0) %>%
+  select(FireYear, Latitude, Longitude, FinalFireSizeAcres, County)
+
+# Filter to larger fires only (over 100 acres)
+fires_large <- fires_clean %>%
+  filter(FinalFireSizeAcres >= 100)
+
+# Check fire size issue
+summary(fires_large$FinalFireSizeAcres)
+
+# Remove outlier fires and bad coordinates
+fires_large <- fires_clean %>%
+  filter(FinalFireSizeAcres >= 100,
+         FinalFireSizeAcres < 100000,
+         Latitude > 41, Latitude < 47,
+         Longitude > -125, Longitude < -116)
+
+nrow(fires_large)
+
+
+
+ggplot() +
+  geom_sf(data = oregon_counties, fill = "grey90", color = "white") +
+  geom_point(data = precip_2025_clean,
+             aes(x = LONGITUDE, y = LATITUDE, color = PRCP),
+             size = 6, alpha = 0.3) +
+  scale_color_gradient(low = "lightblue", high = "darkblue",
+                       name = "2025 Precipitation\n(inches)") +
+  geom_point(data = slido_coords,
+             aes(x = X, y = Y),
+             color = "red", size = 0.5, alpha = 0.3) +
+  geom_sf(data = oregon_roads, color = "chocolate4",
+          linewidth = 0.2, alpha = 0.5) +
+  geom_point(data = fires_large,
+             aes(x = Longitude, y = Latitude, size = FinalFireSizeAcres),
+             color = "orange", alpha = 0.6) +
+  scale_size_continuous(name = "Fire Size\n(Acres)", range = c(1, 6)) +
+  labs(
+    title = "Oregon Landslide Risk: Landslides, Wildfires, and Precipitation",
+    subtitle = "Red = Landslides | Orange = Wildfires | Blue = Precipitation | Brown = Roads"
   ) +
   theme_void()

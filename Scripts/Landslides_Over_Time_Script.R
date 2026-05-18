@@ -16,9 +16,10 @@ ggplot() +
             linewidth = 1, alpha = 0.7) +
   scale_color_manual(
     name = "Legend",
-    values = c("Landslide Events" = "steelblue",
-               "Precipitation" = "darkgreen")
+    values = c("Landslide Events" = "darkgreen",
+               "Precipitation" = "steelblue")
   ) +
+  scale_x_continuous(breaks = seq(1950, 2023, by = 10)) +
   labs(
     title = "Oregon Landslide Events and Precipitation Over Time (1950-2023)",
     subtitle = "1996 excluded",
@@ -38,9 +39,10 @@ ggplot() +
             linewidth = 1, alpha = 0.7) +
   scale_color_manual(
     name = "Legend",
-    values = c("Landslide Events" = "steelblue",
-               "Precipitation" = "darkgreen")
+    values = c("Landslide Events" = "darkgreen",
+               "Precipitation" = "steelblue")
   ) +
+  scale_x_continuous(breaks = seq(1950, 2023, by = 10)) +
   labs(
     title = "Oregon Landslide Events and Precipitation Over Time (1950-2023)",
     subtitle = "1996 included",
