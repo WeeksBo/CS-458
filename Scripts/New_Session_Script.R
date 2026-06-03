@@ -35,7 +35,8 @@ precip_clean <- precip %>%
 #)
 
 precip_2025 <- read.csv("C:/OSU/CS_458/Data/Raw_Data/Oregon_percipitation_data.csv")
-
+precip_2025_clean <- precip_2025 %>%
+  filter(!is.na(PRCP))
 
 cause_clean <- slido %>%
   st_drop_geometry() %>%
@@ -52,5 +53,25 @@ cause_clean <- slido %>%
 slope_data <- slido %>%
   st_drop_geometry() %>%
   filter(!is.na(SLOPE))
+
+
+fires <- read.csv("C:/OSU/CS_458/Data/Raw_Data/ODF_Fire.csv")
+
+# Clean and filter to Oregon fires with coordinates
+fires_clean <- fires %>%
+  filter(!is.na(Latitude), !is.na(Longitude), 
+         !is.na(FinalFireSizeAcres), FinalFireSizeAcres > 0) %>%
+  select(FireYear, Latitude, Longitude, FinalFireSizeAcres, County)
+
+# Filter to larger fires only (over 100 acres)
+fires_large <- fires_clean %>%
+  filter(FinalFireSizeAcres >= 100)
+
+# Remove outlier fires and bad coordinates
+fires_large <- fires_clean %>%
+  filter(FinalFireSizeAcres >= 100,
+         FinalFireSizeAcres < 100000,
+         Latitude > 41, Latitude < 47,
+         Longitude > -125, Longitude < -116)
 
 
