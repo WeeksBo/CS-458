@@ -5,7 +5,7 @@ slido_coords <- slido_map %>%
   st_coordinates() %>%
   as.data.frame()
 
-library(tigris)
+library(tigris) 
 library(sf)
 
 oregon_counties <- counties(state = "OR", cb = TRUE) %>%
@@ -131,8 +131,51 @@ fires_large <- fires_clean %>%
 
 nrow(fires_large)
 
+# Adding uncertainty
+slido_map <- slido_map %>%
+  mutate(
+    data_quality = ifelse(
+      !is.na(YEAR) &
+        !is.na(CONTR_FACT) & CONTR_FACT != "" &
+        !is.na(DATA_SOURC) &
+        !is.na(SLOPE) & SLOPE > 0,
+      "Complete",
+      "Incomplete"
+    )
+  )
 
 
+# Add completeness flag to slido_coords
+slido_complete <- slido %>%
+  st_transform(crs = 4326) %>%
+  st_coordinates() %>%
+  as.data.frame() %>%
+  mutate(
+    Complete = (!is.na(slido$CONTR_FACT) & slido$CONTR_FACT != "") & 
+      !is.na(slido$YEAR) &
+      (!is.na(slido$DATA_SOURC) & slido$DATA_SOURC != "" | 
+         !is.na(slido$LOC_METHOD) & slido$LOC_METHOD != ""),
+    DataQuality = ifelse(Complete, "Complete", "Incomplete")
+  )
+
+table(slido_complete$DataQuality)
+
+#Uncertainty without other points 
+ggplot() +
+  geom_sf(data = oregon_counties, fill = "grey90", color = "white") +
+  geom_point(data = slido_complete %>% filter(DataQuality == "Incomplete"),
+             aes(x = X, y = Y),
+             color = "grey50", size = 1, alpha = 0.5) +
+  geom_point(data = slido_complete %>% filter(DataQuality == "Complete"),
+             aes(x = X, y = Y),
+             color = "red", size = 1, alpha = 0.8) +
+  labs(
+    title = "Oregon Landslides with Data Uncertainty",
+    subtitle = "Red = Complete Landslide Data | Gray = Incomplete Landslide Data"
+  ) +
+  theme_void()
+
+# Uncertainty with other points
 ggplot() +
   geom_sf(data = oregon_counties, fill = "grey90", color = "white") +
   geom_point(data = precip_2025_clean,
@@ -140,17 +183,25 @@ ggplot() +
              size = 6, alpha = 0.3) +
   scale_color_gradient(low = "lightblue", high = "darkblue",
                        name = "2025 Precipitation\n(inches)") +
-  geom_point(data = slido_coords,
+  geom_point(data = slido_complete %>% filter(DataQuality == "Incomplete"),
              aes(x = X, y = Y),
-             color = "red", size = 0.5, alpha = 0.3) +
+             color = "grey50", size = 1, alpha = 0.5) +
+  geom_point(data = slido_complete %>% filter(DataQuality == "Complete"),
+             aes(x = X, y = Y),
+             color = "red", size = 1, alpha = 0.8) +
   geom_sf(data = oregon_roads, color = "chocolate4",
           linewidth = 0.2, alpha = 0.5) +
   geom_point(data = fires_large,
              aes(x = Longitude, y = Latitude, size = FinalFireSizeAcres),
-             color = "orange", alpha = 0.6) +
+             color = "orange", alpha = 0.35) +
   scale_size_continuous(name = "Fire Size\n(Acres)", range = c(1, 6)) +
+  annotate("point", x = -123.97, y = 44.567,
+           color = "yellow", size = 5, shape = 16, alpha = 0.78) +
+  annotate("text", x = -124.55, y = 44.5,
+           label = "Predicted\nNext\nLandslide\nZone",
+           color = "black", size = 3, fontface = "bold") +
   labs(
-    title = "Oregon Landslide Risk: Landslides, Wildfires, and Precipitation",
-    subtitle = "Red = Landslides | Orange = Wildfires | Blue = Precipitation | Brown = Roads"
+    title = "Predicted Landslide Risk with Data Uncertainty",
+    subtitle = "Red = Complete Landslide Data | Gray = Incomplete Landslide Data \n Orange = Wildfires | Blue = Precipitation | Brown = Roads "
   ) +
   theme_void()

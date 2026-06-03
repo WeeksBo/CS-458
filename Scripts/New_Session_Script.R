@@ -19,7 +19,7 @@ yearly_counts <- slido_time %>%
 yearly_no1996 <- yearly_counts %>%
   filter(YEAR != 1996)
 
-precip <- read.csv("Data/Raw_Data/percipitation.csv")
+precip <- read.csv("C:/OSU/CS_458/Data/Raw_Data/percipitation.csv")
 
 precip_clean <- precip %>%
   group_by(DATE) %>%
@@ -34,7 +34,7 @@ precip_clean <- precip %>%
 #  layer = "Transportation_Statewide_Road"
 #)
 
-precip_2025 <- read.csv("Data/Raw_Data/Oregon_percipitation_data.csv")
+precip_2025 <- read.csv("C:/OSU/CS_458/Data/Raw_Data/Oregon_percipitation_data.csv")
 
 
 cause_clean <- slido %>%

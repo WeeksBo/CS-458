@@ -84,10 +84,10 @@ slido %>%
 
 
 nodes_causal <- data.frame(
-  Id = c("Slope", "Ground Material", "Road Construction", 
+  Id = c("Slope", "Ground Material", "Road Related", 
          "Clear Cut", "Natural Causes", "Pre-existing Slide",
          "Precipitation", "Wildfire", "Landslide Risk"),
-  Label = c("Slope", "Ground Material", "Road Construction",
+  Label = c("Slope", "Ground Material", "Road Related",
             "Clear Cut", "Natural Causes", "Pre-existing Slide",
             "Precipitation", "Wildfire", "Landslide Risk"),
   Type = c("Physical", "Physical", "Human", 
@@ -97,7 +97,7 @@ nodes_causal <- data.frame(
 )
 
 edges_causal <- data.frame(
-  Source = c("Road Construction", "Clear Cut", "Natural Causes", 
+  Source = c("Road Related", "Clear Cut", "Natural Causes", 
              "Pre-existing Slide", "Slope", "Ground Material", 
              "Precipitation", "Wildfire"),
   Target = rep("Landslide Risk", 8),
